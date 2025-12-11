@@ -1,8 +1,5 @@
 # ==========================================
 # Geometric Tricopter Controller Simulation
-# Scenarios:
-# 1. Normal Flight (Diagonal Path)
-# 2. Upside Down Recovery (Drop & Catch)
 # ==========================================
 
 import numpy as np
@@ -54,16 +51,14 @@ class TricopterParams:
         self.e3 = np.array([0, 0, 1])
 
 # ==========================================
-# 3. CONTROL ALLOCATION (CLAMPED)
+# 3. CONTROL ALLOCATION 
 # ==========================================
 
 def allocation(f_desired, M_desired, params):
     """
     Robust allocation that prioritizes Torque when Thrust is negative.
     """
-    # 1. PREVENT "ZERO-THRUST TRAP"
-    # If controller asks for negative thrust (inverted flight), clamp target to 0.
-    # This forces the solver to find differential thrusts (moments) around 0 baseline.
+    
     target_f = max(0.0, f_desired)
 
     A = np.array([
@@ -73,7 +68,6 @@ def allocation(f_desired, M_desired, params):
         [0,          0,          0,          -params.dt]
     ])
 
-    # Use target_f instead of raw f_desired
     target_vec = np.array([target_f, M_desired[0], M_desired[1], M_desired[2]])
     u_virt = np.linalg.pinv(A) @ target_vec
 
@@ -82,20 +76,15 @@ def allocation(f_desired, M_desired, params):
     f3_vert = u_virt[2]
     f3_lat = u_virt[3]
 
-    # 2. CLAMP NEGATIVE MOTOR COMMANDS
-    # This turns differential math (e.g. +5, -5) into physical commands (+5, 0).
-    # We gain torque but produce some uncommanded net thrust (unavoidable with fixed pitch).
+    
     f1 = max(0.0, f1)
     f2 = max(0.0, f2)
     
-    # 3. ROBUST SERVO CALCULATION
     # Add epsilon to vertical component to prevent divide-by-zero or rapid flipping 
     # when tail thrust is near zero.
     epsilon = 1e-4
     
-    # If f3_vert is negative (solver wants downward force), we treat it as 0 for angle 
-    # calculation but the motor won't spin anyway due to magnitude calc below.
-    # We use abs() or max() to keep the vector 'forward' for the servo logic.
+   
     safe_vert = max(0.0, f3_vert) 
     
     raw_delta = np.arctan2(f3_lat, safe_vert + epsilon)
@@ -237,7 +226,6 @@ if __name__ == "__main__":
     
     # --- Scenario 2: Upside Down Recovery (178 degrees) ---
     # Construct 178 degree rotation about X-axis
-    # This matches the "Case II" example from the reference paper
     angle = np.radians(178)
     c, s = np.cos(angle), np.sin(angle)
     R_178 = np.array([
@@ -247,13 +235,13 @@ if __name__ == "__main__":
     ])
     
     init_recovery = {
-        'x': np.array([0.0, 0.0, -5.0]), # Start high (-5m)
+        'x': np.array([0.0, 0.0, -5.0]), 
         'v': np.array([0.0, 0.0, 0.0]),
         'R': R_178,                      # 178 degree initial roll
         'Omega': np.array([0.0, 0.0, 0.0])
     }
     
-    # Target: Stabilize at 2m high (-2m)
+    # Target: Stabilize at 2m high 
     def target_recovery(t):
         return {
             'x': np.array([0.0, 0.0, -2.0]), 
