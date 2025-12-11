@@ -13,7 +13,7 @@ This repository implements a **Geometric Control** framework that:
 3.  **Guarantees Stability:**
     * **Attitude:** Exponential Stability.
     * **Position:** Uniformly Ultimately Bounded (UUB) stability in the presence of parasitic lateral forces.
-4.  **Global Recovery:** Features a "geometric dimmer switch" on thrust that allows the drone to recover from inverted (upside-down) initial conditions.
+4.  **Global Recovery:** Features a geometric dimmer switch on thrust that allows the drone to recover from inverted (upside-down) initial conditions.
 
 ## 🚀 Key Features
 
